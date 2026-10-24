@@ -28,7 +28,8 @@ export async function createShortUrl(url) {
 export async function getRedirectUrl(shortId) {
     const entry = await UrlModel.findOneAndUpdate(
         {shortId},
-        {$push: {
+        {
+            $push: {
                 visitHistory: {
                     timestamp: Date.now()
                 }
@@ -37,4 +38,26 @@ export async function getRedirectUrl(shortId) {
     );
 
     return entry?.redirectUrl;
+}
+
+export async function getVisitHistory(limit) {
+    const pipeline = [
+        {
+            $project: {
+                shortId: 1,
+                redirectUrl: 1,
+                visits: {$size: {$ifNull: ["$visitHistory", []]}},
+                createdAt: 1,
+                lastVisitedAt: {$toDate: {$max: "$visitHistory.timestamp"}},
+                _id: 0
+            }
+        },
+        {$sort: {visits: -1, shortId: 1}}
+    ];
+
+    if (limit) {
+        pipeline.push({$limit: limit});
+    }
+
+    return UrlModel.aggregate(pipeline);
 }

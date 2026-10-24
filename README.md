@@ -7,9 +7,18 @@ The bot and a small Express server run together in one Node process.
 ## Commands
 
 - `/create link:<url>` - creates a short URL
+- `/analytics` - shows the top 5 most visited links, with a **View all** button that opens the full list
 - `/ping` - replies with Pong
 
 The bot also replies with a greeting when someone sends a normal message.
+
+## Analytics
+
+Every time a short link is opened, the visit is saved in `visitHistory`.
+
+`/analytics` in Discord only shows the top 5 links. Discord messages can't be longer than 2000 characters, so listing every link fails once there are around 40 of them. Instead of splitting it into many messages or adding pages, the bot shows a short preview and a **View all** button.
+
+The button opens `BASE_URL/analytics`, a page served by the Express server that lists every link with its original URL, visit count, created date and last visited date (shown in IST). A web page has no length limit, so it can show all the details.
 
 ## Tech used
 
@@ -17,6 +26,7 @@ The bot also replies with a greeting when someone sends a normal message.
 - Express
 - MongoDB with Mongoose
 - nanoid for the short ids
+- moment-timezone for showing dates in IST
 
 ## Setup
 
@@ -60,10 +70,12 @@ Short links use `BASE_URL`, which is `http://localhost:8000` by default, so they
 
 ```
 index.js            bot setup and event handlers
-slashCommands.js    /ping and /create
+slashCommands.js    /ping, /create and /analytics
 command.js          registers slash commands with Discord
-server.js           Express server for redirects
+server.js           Express server for redirects and the analytics page
 services/           url helper functions
+views/              HTML for the analytics page
+utils/              small helpers (HTML escaping)
 models/             mongoose model
 config.js           reads env variables
 connection.js       mongodb connection
